@@ -1,0 +1,276 @@
+
+
+
+
+
+
+
+
+#include <Wire.h>
+
+
+#include <Adafruit_AMG88xx.h>
+
+
+#include "StopwatchLib.h" 
+
+
+Stopwatch stopwatch;
+
+Adafruit_AMG88xx amg;
+
+
+
+float pixels[AMG88xx_PIXEL_ARRAY_SIZE];
+
+
+bool myBreath = false; //myFever in this case is the breath and that is less than the actual temp of the person 
+
+
+
+
+
+
+
+//Calibrate with ICe and hot water that you know the temperature of. Might change with time.
+//Calibrate with water at 37 degrees 
+
+float myCalibration = 37;   // +- Degrees to calibrate. This might totally depend on your device, may change with time.
+
+
+float myError = 0.3;         // +- degrees different to print
+
+
+float myTempConcern = 34;    // +- Temperature to check. Depends on myCalibration being correct
+
+
+float myOldTotal;
+
+
+
+
+
+
+
+void setup() {
+
+
+   Serial.begin(9600);
+
+
+   pinMode(LED_BUILTIN, OUTPUT);
+
+
+   bool status;   
+
+
+   // default settings
+
+
+   status = amg.begin();
+
+
+   if (!status) {
+
+
+       Serial.println("Could not find a valid AMG88xx sensor, check wiring!");
+
+
+       while (1);
+
+
+   } 
+
+
+
+}
+
+
+//delay(100); // let sensor boot up
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void loop() {
+
+  //delay(20) simula la tarea a medir
+  stopwatch.Reset();
+  delay(20);
+  stopwatch.Update();
+  
+  
+  
+   //read all the pixels
+
+
+   amg.readPixels(pixels); //this will show each pixel 
+   //Serial.println(pixels);
+
+   digitalWrite(LED_BUILTIN, HIGH);// sets it off
+
+
+  
+
+
+   float myTemp1 = 0;    
+
+
+   float myTemp2 = 0; 
+
+
+   float myTotal = 0; 
+
+
+   float myHighest = 0; //this is the highest 
+
+
+
+
+
+
+
+
+   for(int i=1; i <= AMG88xx_PIXEL_ARRAY_SIZE; i++){
+
+    
+
+       float myIncoming = pixels[i-1]; //this will iterate through each pixel 
+
+       Serial.println(myIncoming); 
+       Serial.println(stopwatch.GetElapsed());
+
+       
+       myTotal += myIncoming;
+
+
+      if (myIncoming > myHighest){myHighest = myIncoming;} // grab the largest
+
+
+      if (myIncoming + myCalibration > myTempConcern){  // raw score for generic uncalibrated face temperature
+       
+
+         if (myTemp1 == 0){
+
+
+            myTemp1 = myIncoming; // allow one false reading
+
+
+          } else { // else would be if the incoming is less thank 34 then we have a breath out 
+
+
+            myTemp2 = myIncoming;
+
+
+           }
+
+
+       }  
+
+
+      
+
+
+   }
+
+
+   if (myTemp2 != 0){
+
+
+      myBreath = true;   // once set don't unset.
+
+
+  //   }
+
+
+
+
+
+
+
+   if ( myTotal > myOldTotal + (1*myError*64) || myTotal < myOldTotal + (-1*myError*64) ){  // just checking for change, default myError = 0.3   
+
+
+        digitalWrite(LED_BUILTIN, LOW);
+
+
+        delay(200);     
+
+
+        digitalWrite(LED_BUILTIN, HIGH);
+
+
+        delay(200);     
+
+
+        Serial.println("8x8 IR array Average Temperature: "+ String(myCalibration+myTotal/64)+ ", Highest Temp: "+String(myCalibration+myHighest));   
+
+
+       }
+
+
+
+
+
+
+   myOldTotal = myTotal;
+
+
+
+
+
+
+
+   if (myBreath){
+
+
+     for (int j=0; j<= 60; j++){
+
+
+        digitalWrite(LED_BUILTIN, LOW);
+
+
+        delay(100);
+
+
+        digitalWrite(LED_BUILTIN, HIGH);
+
+
+        delay(100);
+
+
+        }
+
+
+        myBreath = false; // reset fever       
+
+
+        digitalWrite(LED_BUILTIN, LOW);
+
+
+     }
+
+
+
+
+
+
+
+   //delay a second
+
+
+   delay(5);}}
+
+
+
+
+
