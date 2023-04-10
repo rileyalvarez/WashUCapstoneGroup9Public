@@ -1,0 +1,78 @@
+#include "HUSKYLENS.h"
+//#include "SoftwareSerial.h"
+//Operations and Expected Results
+//1. Upload the above codes to your Arduino board.
+HUSKYLENS huskylens;
+//SoftwareSerial mySerial(10, 11); // RX, TX
+//HUSKYLENS green line >> Pin 10; blue line >> Pin 11
+void printResult(HUSKYLENSResult result);
+void setup() {
+Serial.begin(115200);
+Serial1.begin(9600);
+while (!huskylens.begin(Serial1))
+{
+Serial.println(F("Begin failed!"));
+Serial.println(F("1.Please recheck the \"Protocol Type\" in HUSKYLENS (General Settings>>Protocol Type>>Serial 9600)"));
+Serial.println(F("2.Please recheck the connection."));
+delay(100);
+}
+}
+void loop() {
+if (!huskylens.request()) Serial.println(F("Fail to request data from HUSKYLENS, recheck the connection!"));
+else if(!huskylens.isLearned()) Serial.println(F("Nothing learned, press learn button on HUSKYLENS to learn one!"));
+else if(!huskylens.available()) Serial.println(F("No person detected in the zPod!"));
+else
+{
+//Serial.println(F("###########"));
+while (huskylens.available())
+{
+HUSKYLENSResult result = huskylens.read();
+printResult(result);
+}
+}
+}
+
+
+
+void printResult(HUSKYLENSResult result){ 
+      
+  if (result.command == COMMAND_RETURN_BLOCK){
+   //unsigned long elapsed_time = millis(); //this will keep track of time 
+      //Serial.print("Elapsed time: ");
+      //Serial.print(elapsed_time);
+      //Serial.println(" ms");
+          
+      //delay(100);
+
+    //float addtopLimit = result.yCenter + 100;
+    //float addbottomLimit = result.yCenter + 81.82;
+
+    //float subtopLimit = result.yCenter - 100;
+    //float subbottomLimit = result.yCenter - 81.82;
+      
+    //Serial.println(String()+F("Block:xCenter=")+result.xCenter+F(",yCenter=")+result.yCenter+F(",width=")+result.width+F(",height=")+result.height+F(",ID=")+result.ID+elapsed_time+(" ms"));
+    Serial.println(result.yCenter);
+    
+   // int i = 0;
+   // while (i <= 100000000) {
+       //if ((addtopLimit > result.yCenter > addbottomLimit) || (subtopLimit > result.yCenter > subbottomLimit)){
+      //Serial.println(String() + ("Heart Beat Detected") + F(", yCenter=")+result.yCenter+ F("Time stamp: ")+elapsed_time + F("ms"));
+      //i += 1; 
+   // }
+      
+   // }
+   
+    
+    
+     
+      
+      
+ 
+  }}
+//else if (result.command == COMMAND_RETURN_ARROW){
+//Serial.println(String()+F("Arrow:xOrigin=")+result.xOrigin+F(",yOrigin=")+result.yOrigin+F(",xTarget=")+result.xTarget+F(",yTarget=")+result.yTarget+F(",ID=")+result.ID);
+//}
+//else{
+//Serial.println("Object unknown!");
+//}
+//}
